@@ -130,7 +130,7 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:var(--font);ov
 .font-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px}
 .font-btn{padding:9px 7px;border-radius:8px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);cursor:pointer;color:#fff;font-size:.82rem;transition:all .2s;text-align:center}
 .font-btn.sel{border-color:var(--accent);background:rgba(255,255,255,.1);color:var(--accent)}
-#strip-preview-wrap{background:rgba(255,255,255,.04);border-radius:10px;padding:10px;border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;min-height:100px;margin-bottom:12px}
+#strip-preview-wrap{background:rgba(255,255,255,.04);border-radius:10px;padding:10px;border:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;min-height:420px;margin-bottom:12px}
 #strip-preview{max-width:100%;max-height:140px;border-radius:6px}
 #cfg-footer{padding:13px 18px;flex-shrink:0;border-top:1px solid rgba(255,255,255,.08)}
 #cfg-apply{width:100%;padding:12px;background:var(--accent);color:#000;border:none;border-radius:10px;font-weight:900;font-size:.88rem;cursor:pointer;letter-spacing:2px;transition:filter .2s;font-family:var(--font-bold)}
@@ -295,7 +295,7 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:var(--font);ov
  </div>
  
  <script>
- // Ã¢ÂÂÃ¢ÂÂ PHOTO BOOTH v3.0 Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+ // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ PHOTO BOOTH v3.0 ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
  const DEFAULTS={
  eventName:'Party Cam',welcomeTitle:'Photo Booth',welcomeSubtitle:'Presiona el bot\u00f3n y sonr\u00ede!',
  welcomeBgColor:'#0d0d1a',welcomeAccent:'#ff66cc',
@@ -455,7 +455,7 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:var(--font);ov
  startReturn();
  }
  
- // Ã¢ÂÂÃ¢ÂÂ QR Ã¢ÂÂÃ¢ÂÂ
+ // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ QR ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
  async function generateQR(dataUrl){
  const qcv=$('qr-canvas');if(!qcv)return;
  const qrLabel=$('qr-label');const qrHint=$('qr-hint');
@@ -464,39 +464,39 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:var(--font);ov
  ctx.fillStyle='rgba(255,255,255,0.08)';ctx.fillRect(0,0,qcv.width,qcv.height);
  ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='13px Arial';ctx.textAlign='center';
  ctx.fillText('Subiendo...', qcv.width/2, qcv.height/2);
- if(qrLabel)qrLabel.textContent='📤 SUBIENDO IMAGEN...';
+ if(qrLabel)qrLabel.textContent='ð¤ SUBIENDO IMAGEN...';
  try{
-  // Convert dataUrl to blob
-  const res=await fetch(dataUrl);const blob=await res.blob();
-  // Try upload to file.io (returns a link valid for 1 download)
-  const fd=new FormData();fd.append('file',blob,'strip.jpg');
-  const r=await fetch('https://file.io/?expires=1d',{method:'POST',body:fd});
-  const json=await r.json();
-  const fileUrl=json.link||json.url;
-  if(!fileUrl)throw new Error('No URL returned');
-  // Generate QR for the URL
-  const size=qcv.width;
-  const apiUrl='https://api.qrserver.com/v1/create-qr-code/?size='+size+'x'+size+'&data='+encodeURIComponent(fileUrl)+'&margin=2&color=000000&bgcolor=ffffff';
-  const img=new Image();img.crossOrigin='anonymous';
-  img.onload=()=>{ctx.clearRect(0,0,size,size);ctx.drawImage(img,0,0,size,size);};
-  img.src=apiUrl;
-  if(qrLabel)qrLabel.textContent='📱 ESCANEA PARA DESCARGAR';
-  if(qrHint)qrHint.textContent='Link activo 24h · '+fileUrl.substring(0,30)+'...';
-  // Make QR clickable to open link
-  qcv.style.cursor='pointer';qcv.onclick=()=>window.open(fileUrl,'_blank');
+ // Convert dataUrl to blob
+ const res=await fetch(dataUrl);const blob=await res.blob();
+ // Try upload to file.io (returns a link valid for 1 download)
+ const fd=new FormData();fd.append('file',blob,'strip.jpg');
+ const r=await fetch('https://file.io/?expires=1d',{method:'POST',body:fd});
+ const json=await r.json();
+ const fileUrl=json.link||json.url;
+ if(!fileUrl)throw new Error('No URL returned');
+ // Generate QR for the URL
+ const size=qcv.width;
+ const apiUrl='https://api.qrserver.com/v1/create-qr-code/?size='+size+'x'+size+'&data='+encodeURIComponent(fileUrl)+'&margin=2&color=000000&bgcolor=ffffff';
+ const img=new Image();img.crossOrigin='anonymous';
+ img.onload=()=>{ctx.clearRect(0,0,size,size);ctx.drawImage(img,0,0,size,size);};
+ img.src=apiUrl;
+ if(qrLabel)qrLabel.textContent='ð± ESCANEA PARA DESCARGAR';
+ if(qrHint)qrHint.textContent='Link activo 24h Â· '+fileUrl.substring(0,30)+'...';
+ // Make QR clickable to open link
+ qcv.style.cursor='pointer';qcv.onclick=()=>window.open(fileUrl,'_blank');
  }catch(e){
-  // Fallback: show error and hint to use AirDrop
-  ctx.clearRect(0,0,qcv.width,qcv.height);
-  ctx.fillStyle='rgba(255,100,100,0.15)';ctx.fillRect(0,0,qcv.width,qcv.height);
-  ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='12px Arial';ctx.textAlign='center';
-  ctx.fillText('Sin internet',qcv.width/2,qcv.height/2-10);
-  ctx.fillText('Usa AirDrop',qcv.width/2,qcv.height/2+10);
-  if(qrLabel)qrLabel.textContent='⚡ USA AIRDROP / COMPARTIR';
-  if(qrHint)qrHint.textContent='Sin conexión para subir imagen';
+ // Fallback: show error and hint to use AirDrop
+ ctx.clearRect(0,0,qcv.width,qcv.height);
+ ctx.fillStyle='rgba(255,100,100,0.15)';ctx.fillRect(0,0,qcv.width,qcv.height);
+ ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='12px Arial';ctx.textAlign='center';
+ ctx.fillText('Sin internet',qcv.width/2,qcv.height/2-10);
+ ctx.fillText('Usa AirDrop',qcv.width/2,qcv.height/2+10);
+ if(qrLabel)qrLabel.textContent='â¡ USA AIRDROP / COMPARTIR';
+ if(qrHint)qrHint.textContent='Sin conexiÃ³n para subir imagen';
  }
 }
  
- // Ã¢ÂÂÃ¢ÂÂ AIRDROP / SHARE Ã¢ÂÂÃ¢ÂÂ
+ // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ AIRDROP / SHARE ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
  $('btn-airdrop').addEventListener('click',async()=>{
  cancelReturn();
  try{
@@ -516,7 +516,7 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:var(--font);ov
  startReturn();
  });
  
- // Ã¢ÂÂÃ¢ÂÂ BUILD STRIP Ã¢ÂÂÃ¢ÂÂ
+ // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ BUILD STRIP ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
  function loadImg(src){return new Promise(res=>{if(!src)return res(null);const img=new Image();img.onload=()=>res(img);img.onerror=()=>res(null);img.src=src;});}
  
  function roundRect(ctx,x,y,w,h,r){
@@ -611,7 +611,7 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:var(--font);ov
  
  function goHome(){cancelReturn();photos=[];activeFilter='normal';videoWrap.className='';filterStrip.querySelectorAll('.fb').forEach(b=>b.classList.remove('on'));filterStrip.querySelector('[data-f="normal"]')?.classList.add('on');buildSlots();showScreen('welcome');}
  
- // Ã¢ÂÂÃ¢ÂÂ LOGO UPLOAD Ã¢ÂÂÃ¢ÂÂ
+ // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ LOGO UPLOAD ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
  $('logo-file-input').addEventListener('change',e=>{
  const file=e.target.files[0];if(!file)return;
  const reader=new FileReader();reader.onload=ev=>{saveCfg({logoDataUrl:ev.target.result});};reader.readAsDataURL(file);e.target.value='';
@@ -626,12 +626,13 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:var(--font);ov
  };reader.readAsDataURL(file);e.target.value='';
  });
  
- // Ã¢ÂÂÃ¢ÂÂ CONFIG TABS Ã¢ÂÂÃ¢ÂÂ
+ // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ CONFIG TABS ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
  document.querySelectorAll('.cfg-tab').forEach(tab=>{
  tab.addEventListener('click',()=>{
  document.querySelectorAll('.cfg-tab').forEach(t=>t.classList.remove('active'));
  document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('active'));
  tab.classList.add('active');$('tab-'+tab.dataset.tab)?.classList.add('active');
+if(tab.dataset.tab==='tira')setTimeout(updateStripPreview,50);
  if(tab.dataset.tab==='tipografia')buildFontGrids();
  if(tab.dataset.tab==='tira')updateStripPreview();
  });
@@ -641,24 +642,24 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:var(--font);ov
  const prev=$('strip-preview');if(!prev)return;
  const panelOpen=$('cfg-panel')&&$('cfg-panel').classList.contains('open');
  const cfg=panelOpen?{
-  totalPhotos:parseInt($('ci-total')?.value)||CFG.totalPhotos,
-  paddingX:parseInt($('ci-px')?.value)||CFG.paddingX,
-  paddingTop:parseInt($('ci-pt')?.value)||CFG.paddingTop,
-  paddingBottom:parseInt($('ci-pb')?.value)||CFG.paddingBottom,
-  gapBetweenPhotos:parseInt($('ci-gap')?.value)||CFG.gapBetweenPhotos,
-  cornerRadius:parseInt($('ci-rad')?.value)||CFG.cornerRadius,
-  stripWidth:CFG.stripWidth,
-  photoAspectRatio:CFG.photoAspectRatio,
-  stripBgColor:$('ci-bgcol')?.value||CFG.stripBgColor,
-  stripTextColor:$('ci-tcol')?.value||CFG.stripTextColor,
-  accentColor:$('ci-accent')?.value||CFG.welcomeAccent,
-  welcomeAccent:$('ci-accent')?.value||CFG.welcomeAccent,
-  topBarHeight:parseInt($('ci-topbar')?.value)||CFG.topBarHeight,
-  bottomBarHeight:parseInt($('ci-botbar')?.value)||CFG.bottomBarHeight,
-  fontSizeName:parseInt($('ci-fs-name')?.value)||CFG.fontSizeName,
-  fontName:CFG.fontName,
-  eventName:$('ci-name')?.value||CFG.eventName,
-  logoDataUrl:CFG.logoDataUrl
+ totalPhotos:parseInt($('ci-total')?.value)||CFG.totalPhotos,
+ paddingX:parseInt($('ci-px')?.value)||CFG.paddingX,
+ paddingTop:parseInt($('ci-pt')?.value)||CFG.paddingTop,
+ paddingBottom:parseInt($('ci-pb')?.value)||CFG.paddingBottom,
+ gapBetweenPhotos:parseInt($('ci-gap')?.value)||CFG.gapBetweenPhotos,
+ cornerRadius:parseInt($('ci-rad')?.value)||CFG.cornerRadius,
+ stripWidth:CFG.stripWidth,
+ photoAspectRatio:CFG.photoAspectRatio,
+ stripBgColor:$('ci-bgcol')?.value||CFG.stripBgColor,
+ stripTextColor:$('ci-tcol')?.value||CFG.stripTextColor,
+ accentColor:$('ci-accent')?.value||CFG.welcomeAccent,
+ welcomeAccent:$('ci-accent')?.value||CFG.welcomeAccent,
+ topBarHeight:parseInt($('ci-topbar')?.value)||CFG.topBarHeight,
+ bottomBarHeight:parseInt($('ci-botbar')?.value)||CFG.bottomBarHeight,
+ fontSizeName:parseInt($('ci-fs-name')?.value)||CFG.fontSizeName,
+ fontName:CFG.fontName,
+ eventName:$('ci-name')?.value||CFG.eventName,
+ logoDataUrl:CFG.logoDataUrl
  }:(typeof CFG!=='undefined'?CFG:DEFAULTS);
  const n=photos.length||cfg.totalPhotos||3;
  const PX=cfg.paddingX,PT=cfg.paddingTop,PB=cfg.paddingBottom,GAP=cfg.gapBetweenPhotos;
@@ -678,39 +679,39 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:var(--font);ov
  if(cfg.logoDataUrl){try{const limg=new Image();limg.src=cfg.logoDataUrl;if(limg.complete&&limg.naturalWidth>0){const lh=cfg.topBarHeight>10?cfg.topBarHeight-4:PT*0.7;const lw=Math.round(lh*limg.naturalWidth/limg.naturalHeight);ctx.drawImage(limg,Math.round((SW-lw)/2),Math.round((cfg.topBarHeight-lh)/2)||2,lw,lh);}}catch(e){}}
  // Photo slots
  for(let k=0;k<n;k++){
-  const x=PX,y=PT+(PH+GAP)*k;
-  const r=cfg.cornerRadius||0;
-  if(photos[k]){
-   ctx.save();ctx.beginPath();
-   if(r>0){ctx.moveTo(x+r,y);ctx.arcTo(x+PW,y,x+PW,y+PH,r);ctx.arcTo(x+PW,y+PH,x,y+PH,r);ctx.arcTo(x,y+PH,x,y,r);ctx.arcTo(x,y,x+PW,y,r);}
-   else{ctx.rect(x,y,PW,PH);}
-   ctx.clip();ctx.drawImage(photos[k],x,y,PW,PH);ctx.restore();
-  }else{
-   // Placeholder
-   ctx.fillStyle='rgba(128,128,128,0.15)';
-   if(r>0){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+PW,y,x+PW,y+PH,r);ctx.arcTo(x+PW,y+PH,x,y+PH,r);ctx.arcTo(x,y+PH,x,y,r);ctx.arcTo(x,y,x+PW,y,r);ctx.closePath();ctx.fill();}
-   else{ctx.fillRect(x,y,PW,PH);}
-   ctx.strokeStyle='rgba(128,128,128,0.3)';ctx.lineWidth=1;
-   if(r>0){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+PW,y,x+PW,y+PH,r);ctx.arcTo(x+PW,y+PH,x,y+PH,r);ctx.arcTo(x,y+PH,x,y,r);ctx.arcTo(x,y,x+PW,y,r);ctx.closePath();ctx.stroke();}
-   else{ctx.strokeRect(x,y,PW,PH);}
-   ctx.fillStyle='rgba(255,255,255,0.25)';ctx.font='bold '+Math.round(PH*0.12)+'px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
-   ctx.fillText('📷 '+String.fromCharCode(65+k),x+PW/2,y+PH/2);
-  }
+ const x=PX,y=PT+(PH+GAP)*k;
+ const r=cfg.cornerRadius||0;
+ if(photos[k]){
+ ctx.save();ctx.beginPath();
+ if(r>0){ctx.moveTo(x+r,y);ctx.arcTo(x+PW,y,x+PW,y+PH,r);ctx.arcTo(x+PW,y+PH,x,y+PH,r);ctx.arcTo(x,y+PH,x,y,r);ctx.arcTo(x,y,x+PW,y,r);}
+ else{ctx.rect(x,y,PW,PH);}
+ ctx.clip();ctx.drawImage(photos[k],x,y,PW,PH);ctx.restore();
+ }else{
+ // Placeholder
+ ctx.fillStyle='rgba(128,128,128,0.15)';
+ if(r>0){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+PW,y,x+PW,y+PH,r);ctx.arcTo(x+PW,y+PH,x,y+PH,r);ctx.arcTo(x,y+PH,x,y,r);ctx.arcTo(x,y,x+PW,y,r);ctx.closePath();ctx.fill();}
+ else{ctx.fillRect(x,y,PW,PH);}
+ ctx.strokeStyle='rgba(128,128,128,0.3)';ctx.lineWidth=1;
+ if(r>0){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+PW,y,x+PW,y+PH,r);ctx.arcTo(x+PW,y+PH,x,y+PH,r);ctx.arcTo(x,y+PH,x,y,r);ctx.arcTo(x,y,x+PW,y,r);ctx.closePath();ctx.stroke();}
+ else{ctx.strokeRect(x,y,PW,PH);}
+ ctx.fillStyle='rgba(255,255,255,0.25)';ctx.font='bold '+Math.round(PH*0.12)+'px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
+ ctx.fillText('ð· '+String.fromCharCode(65+k),x+PW/2,y+PH/2);
+ }
  }
  // Bottom bar
  if(cfg.bottomBarHeight>0){ctx.fillStyle=cfg.accentColor||'#ff66cc';ctx.fillRect(0,SH-cfg.bottomBarHeight,SW,cfg.bottomBarHeight);}
  // Event name text
  if(cfg.eventName){
-  const nameSize=cfg.fontSizeName||14;
-  ctx.fillStyle=cfg.stripTextColor||'#333333';
-  ctx.font='bold '+nameSize+'px '+(cfg.fontName||'Arial');
-  ctx.textAlign='center';ctx.textBaseline='top';
-  ctx.fillText(cfg.eventName,SW/2,SH-PB+4);
+ const nameSize=cfg.fontSizeName||14;
+ ctx.fillStyle=cfg.stripTextColor||'#333333';
+ ctx.font='bold '+nameSize+'px '+(cfg.fontName||'Arial');
+ ctx.textAlign='center';ctx.textBaseline='top';
+ ctx.fillText(cfg.eventName,SW/2,SH-PB+4);
  }
  ctx.restore();
 }
  
- // Ã¢ÂÂÃ¢ÂÂ OPEN/POPULATE CONFIG Ã¢ÂÂÃ¢ÂÂ
+ // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ OPEN/POPULATE CONFIG ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
  $('cfg-toggle').addEventListener('click',()=>{
  $('ci-title').value=CFG.welcomeTitle;$('ci-sub').value=CFG.welcomeSubtitle;
  $('ci-name').value=CFG.eventName;$('ci-leg1').value=CFG.leg1||'';$('ci-leg2').value=CFG.leg2||'';$('ci-date').value=CFG.eventDate;
