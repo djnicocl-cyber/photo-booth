@@ -459,27 +459,36 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:var(--font);ov
  async function generateQR(dataUrl){
  const qcv=$('qr-canvas');if(!qcv)return;
  const qrLabel=$('qr-label');const qrHint=$('qr-hint');
- const ctx=qcv.getContext('2d');ctx.clearRect(0,0,qcv.width,qcv.height);
- ctx.fillStyle='rgba(255,255,255,0.08)';ctx.fillRect(0,0,qcv.width,qcv.height);
- ctx.font='18px sans-serif';ctx.fillStyle='#aaa';
- ctx.fillText('📤 Subiendo....',qcv.width/2-60,qcv.height/2);
- qrLabel.textContent='Subiendo imagen...';
- // Create compressed JPEG blob for upload
- const uploadCanvas=document.createElement('canvas');
- uploadCanvas.width=800;uploadCanvas.height=Math.round(800*1.5);
- const uctx=uploadCanvas.getContext('2d');
+ const ctx=qcv.getContext('2d');
+ ctx.clearRect(0,0,qcv.width,qcv.height);
+ ctx.fillStyle='rgba(255,255,255,0.06)';ctx.fillRect(0,0,qcv.width,qcv.height);
+ ctx.font='16px sans-serif';ctx.fillStyle='#ccc';ctx.textAlign='center';
+ ctx.fillText('📤 Subiendo imagen...',qcv.width/2,qcv.height/2-10);
+ ctx.font='12px sans-serif';ctx.fillStyle='#888';
+ ctx.fillText('Espera un momento',qcv.width/2,qcv.height/2+15);
+ qrLabel.textContent='Subiendo...';
+ if(qrHint)qrHint.style.display='none';
+ // Compress image to JPEG for fast upload
+ const uc=document.createElement('canvas');
+ const scale=Math.min(1,800/Math.max(dataUrl.length/1000,1));
+ uc.width=800;uc.height=1200;
+ const uctx=uc.getContext('2d');
  const img=new Image();
  await new Promise(res=>{img.onload=res;img.src=dataUrl;});
- uctx.drawImage(img,0,0,uploadCanvas.width,uploadCanvas.height);
- const blob=await new Promise(res=>uploadCanvas.toBlob(res,'image/jpeg',0.75));
- // Try transfer.sh upload (fast, reliable)
+ uctx.drawImage(img,0,0,uc.width,uc.height);
+ const blob=await new Promise(res=>uc.toBlob(res,'image/jpeg',0.78));
  try{
-  const fd=new FormData();fd.append('file',blob,'photo-booth.jpg');
-  const r=await fetch('https://transfer.sh/',{method:'POST',body:fd,headers:{'Max-Days':'1'}});
-  if(!r.ok)throw new Error('upload failed');
-  const dlUrl=(await r.text()).trim();
-  const size=qcv.width;
-  const apiUrl='https://api.qrserver.com/v1/create-qr-code/?size='+size+'x'+size+'&data='+encodeURIComponent(dlUrl);
+  const fd=new FormData();
+  fd.append('file',blob,'photo-booth.jpg');
+  const r=await fetch('https://tmpfiles.org/api/v1/upload',{method:'POST',body:fd});
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  const j=await r.json();
+  if(j.status!=='success')throw new Error('Upload failed');
+  // Convert preview URL to direct download URL
+  const dlUrl=j.data.url.replace('tmpfiles.org/','tmpfiles.org/dl/');
+  // Generate QR pointing to direct download
+  const sz=qcv.width;
+  const qrUrl='https://api.qrserver.com/v1/create-qr-code/?size='+sz+'x'+sz+'&ecc=M&data='+encodeURIComponent(dlUrl);
   qcv.style.display='none';
   const qrImg=new Image();
   qrImg.onload=()=>{
@@ -487,24 +496,31 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:var(--font);ov
    ctx.clearRect(0,0,qcv.width,qcv.height);
    ctx.drawImage(qrImg,0,0,qcv.width,qcv.height);
   };
-  qrImg.src=apiUrl;
-  qrLabel.textContent='💾 Escanea para descargar';
-  qrHint.textContent='🔗 Link válido 24h';
-  qrHint.style.display='block';
+  qrImg.onerror=()=>{
+   qcv.style.display='block';
+   ctx.clearRect(0,0,qcv.width,qcv.height);
+   ctx.fillStyle='#333';ctx.fillRect(0,0,qcv.width,qcv.height);
+   ctx.fillStyle='#fff';ctx.font='14px sans-serif';ctx.textAlign='center';
+   ctx.fillText('Abre este link:',qcv.width/2,qcv.height/2-10);
+   ctx.fillStyle='#7c3aed';ctx.font='11px sans-serif';
+   ctx.fillText(dlUrl,qcv.width/2,qcv.height/2+15);
+  };
+  qrImg.src=qrUrl;
+  qrLabel.textContent='📱 Escanea para descargar';
+  if(qrHint){qrHint.textContent='⏱ Link valido 60 min';qrHint.style.display='block';}
   qcv.parentElement.onclick=()=>window.open(dlUrl,'_blank');
   qcv.parentElement.style.cursor='pointer';
  }catch(err){
-  // Fallback: show download button
+  console.error('QR upload error:',err);
   ctx.clearRect(0,0,qcv.width,qcv.height);
   ctx.fillStyle='#1a1a2e';ctx.fillRect(0,0,qcv.width,qcv.height);
-  ctx.font='40px sans-serif';ctx.fillStyle='#fff';
   ctx.textAlign='center';
-  ctx.fillText('📥',qcv.width/2,qcv.height/2-20);
-  ctx.font='14px sans-serif';
-  ctx.fillText('Sin internet',qcv.width/2,qcv.height/2+20);
-  ctx.fillText('Usa AirDrop o cable USB',qcv.width/2,qcv.height/2+45);
-  qrLabel.textContent='📎 Descarga directa ↓';
-  qrHint.style.display='none';
+  ctx.font='36px sans-serif';ctx.fillStyle='#fff';ctx.fillText('📥',qcv.width/2,qcv.height/2-20);
+  ctx.font='13px sans-serif';ctx.fillStyle='#aaa';
+  ctx.fillText('Sin conexion a internet',qcv.width/2,qcv.height/2+15);
+  ctx.fillText('Usa AirDrop o cable USB',qcv.width/2,qcv.height/2+35);
+  qrLabel.textContent='Sin internet - descarga directa';
+  if(qrHint)qrHint.style.display='none';
  }
 }
  
