@@ -201,7 +201,7 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:var(--font);ov
  <div id="result-btns">
  <button id="btn-print" class="rbtn primary">&#128438; Imprimir</button>
  <a id="btn-dl" class="rbtn outline" download="photo-strip.jpg">&#11015;&#65039; Descargar JPG</a>
- <button id="btn-new" class="rbtn ghost">&#8635; Nueva foto</button>
+ <button id="btn-new" class="rbtn" style="background:linear-gradient(135deg,#7c3aed,#2563eb);color:#fff;font-size:1.1rem;font-weight:700;padding:16px 32px;border-radius:12px;border:none;margin-top:8px;box-shadow:0 4px 20px rgba(124,58,237,0.4);cursor:pointer;width:100%;letter-spacing:1px;">🔄 NUEVA SESIÓN</button>
  </div>
  <div id="share-row">
  <button class="sc sc-wa" id="sc-wa">WhatsApp</button>
@@ -295,7 +295,7 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:var(--font);ov
  </div>
  
  <script>
- // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ PHOTO BOOTH v3.0 ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+ // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ PHOTO BOOTH v3.0 ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
  const DEFAULTS={
  eventName:'Party Cam',welcomeTitle:'Photo Booth',welcomeSubtitle:'Presiona el bot\u00f3n y sonr\u00ede!',
  welcomeBgColor:'#0d0d1a',welcomeAccent:'#ff66cc',
@@ -455,48 +455,60 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:var(--font);ov
  startReturn();
  }
  
- // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ QR ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+ // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ QR ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
  async function generateQR(dataUrl){
  const qcv=$('qr-canvas');if(!qcv)return;
  const qrLabel=$('qr-label');const qrHint=$('qr-hint');
- // Show uploading state
  const ctx=qcv.getContext('2d');ctx.clearRect(0,0,qcv.width,qcv.height);
  ctx.fillStyle='rgba(255,255,255,0.08)';ctx.fillRect(0,0,qcv.width,qcv.height);
- ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='13px Arial';ctx.textAlign='center';
- ctx.fillText('Subiendo...', qcv.width/2, qcv.height/2);
- if(qrLabel)qrLabel.textContent='ð¤ SUBIENDO IMAGEN...';
+ ctx.font='18px sans-serif';ctx.fillStyle='#aaa';
+ ctx.fillText('📤 Subiendo....',qcv.width/2-60,qcv.height/2);
+ qrLabel.textContent='Subiendo imagen...';
+ // Create compressed JPEG blob for upload
+ const uploadCanvas=document.createElement('canvas');
+ uploadCanvas.width=800;uploadCanvas.height=Math.round(800*1.5);
+ const uctx=uploadCanvas.getContext('2d');
+ const img=new Image();
+ await new Promise(res=>{img.onload=res;img.src=dataUrl;});
+ uctx.drawImage(img,0,0,uploadCanvas.width,uploadCanvas.height);
+ const blob=await new Promise(res=>uploadCanvas.toBlob(res,'image/jpeg',0.75));
+ // Try transfer.sh upload (fast, reliable)
  try{
- // Convert dataUrl to blob
- const res=await fetch(dataUrl);const blob=await res.blob();
- // Try upload to file.io (returns a link valid for 1 download)
- const fd=new FormData();fd.append('file',blob,'strip.jpg');
- const r=await fetch('https://file.io/?expires=1d',{method:'POST',body:fd});
- const json=await r.json();
- const fileUrl=json.link||json.url;
- if(!fileUrl)throw new Error('No URL returned');
- // Generate QR for the URL
- const size=qcv.width;
- const apiUrl='https://api.qrserver.com/v1/create-qr-code/?size='+size+'x'+size+'&data='+encodeURIComponent(fileUrl)+'&margin=2&color=000000&bgcolor=ffffff';
- const img=new Image();img.crossOrigin='anonymous';
- img.onload=()=>{ctx.clearRect(0,0,size,size);ctx.drawImage(img,0,0,size,size);};
- img.src=apiUrl;
- if(qrLabel)qrLabel.textContent='ð± ESCANEA PARA DESCARGAR';
- if(qrHint)qrHint.textContent='Link activo 24h Â· '+fileUrl.substring(0,30)+'...';
- // Make QR clickable to open link
- qcv.style.cursor='pointer';qcv.onclick=()=>window.open(fileUrl,'_blank');
- }catch(e){
- // Fallback: show error and hint to use AirDrop
- ctx.clearRect(0,0,qcv.width,qcv.height);
- ctx.fillStyle='rgba(255,100,100,0.15)';ctx.fillRect(0,0,qcv.width,qcv.height);
- ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='12px Arial';ctx.textAlign='center';
- ctx.fillText('Sin internet',qcv.width/2,qcv.height/2-10);
- ctx.fillText('Usa AirDrop',qcv.width/2,qcv.height/2+10);
- if(qrLabel)qrLabel.textContent='â¡ USA AIRDROP / COMPARTIR';
- if(qrHint)qrHint.textContent='Sin conexiÃ³n para subir imagen';
+  const fd=new FormData();fd.append('file',blob,'photo-booth.jpg');
+  const r=await fetch('https://transfer.sh/',{method:'POST',body:fd,headers:{'Max-Days':'1'}});
+  if(!r.ok)throw new Error('upload failed');
+  const dlUrl=(await r.text()).trim();
+  const size=qcv.width;
+  const apiUrl='https://api.qrserver.com/v1/create-qr-code/?size='+size+'x'+size+'&data='+encodeURIComponent(dlUrl);
+  qcv.style.display='none';
+  const qrImg=new Image();
+  qrImg.onload=()=>{
+   qcv.style.display='block';
+   ctx.clearRect(0,0,qcv.width,qcv.height);
+   ctx.drawImage(qrImg,0,0,qcv.width,qcv.height);
+  };
+  qrImg.src=apiUrl;
+  qrLabel.textContent='💾 Escanea para descargar';
+  qrHint.textContent='🔗 Link válido 24h';
+  qrHint.style.display='block';
+  qcv.parentElement.onclick=()=>window.open(dlUrl,'_blank');
+  qcv.parentElement.style.cursor='pointer';
+ }catch(err){
+  // Fallback: show download button
+  ctx.clearRect(0,0,qcv.width,qcv.height);
+  ctx.fillStyle='#1a1a2e';ctx.fillRect(0,0,qcv.width,qcv.height);
+  ctx.font='40px sans-serif';ctx.fillStyle='#fff';
+  ctx.textAlign='center';
+  ctx.fillText('📥',qcv.width/2,qcv.height/2-20);
+  ctx.font='14px sans-serif';
+  ctx.fillText('Sin internet',qcv.width/2,qcv.height/2+20);
+  ctx.fillText('Usa AirDrop o cable USB',qcv.width/2,qcv.height/2+45);
+  qrLabel.textContent='📎 Descarga directa ↓';
+  qrHint.style.display='none';
  }
 }
  
- // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ AIRDROP / SHARE ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+ // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ AIRDROP / SHARE ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
  $('btn-airdrop').addEventListener('click',async()=>{
  cancelReturn();
  try{
@@ -516,7 +528,7 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:var(--font);ov
  startReturn();
  });
  
- // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ BUILD STRIP ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+ // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ BUILD STRIP ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
  function loadImg(src){return new Promise(res=>{if(!src)return res(null);const img=new Image();img.onload=()=>res(img);img.onerror=()=>res(null);img.src=src;});}
  
  function roundRect(ctx,x,y,w,h,r){
@@ -606,12 +618,12 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:var(--font);ov
  catch(e){toast('\u274c No se pudo copiar: '+e.message);}cancelReturn();startReturn();
  });
  
- function startReturn(){cancelReturn();const ms=CFG.returnDelay;retFill.style.transition='none';retFill.style.width='100%';requestAnimationFrame(()=>requestAnimationFrame(()=>{retFill.style.transition='width '+(ms/1000)+'s linear';retFill.style.width='0%';}));retTimer=setTimeout(goHome,ms);}
+ function startReturn(){cancelReturn();if(typeof updateBtnNewStyle==='function')updateBtnNewStyle();}
  function cancelReturn(){if(retTimer){clearTimeout(retTimer);retTimer=null;}retFill.style.transition='none';retFill.style.width='0%';}
  
  function goHome(){cancelReturn();photos=[];activeFilter='normal';videoWrap.className='';filterStrip.querySelectorAll('.fb').forEach(b=>b.classList.remove('on'));filterStrip.querySelector('[data-f="normal"]')?.classList.add('on');buildSlots();showScreen('welcome');}
  
- // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ LOGO UPLOAD ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+ // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ LOGO UPLOAD ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
  $('logo-file-input').addEventListener('change',e=>{
  const file=e.target.files[0];if(!file)return;
  const reader=new FileReader();reader.onload=ev=>{saveCfg({logoDataUrl:ev.target.result});};reader.readAsDataURL(file);e.target.value='';
@@ -626,7 +638,7 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:var(--font);ov
  };reader.readAsDataURL(file);e.target.value='';
  });
  
- // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ CONFIG TABS ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+ // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ CONFIG TABS ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
  document.querySelectorAll('.cfg-tab').forEach(tab=>{
  tab.addEventListener('click',()=>{
  document.querySelectorAll('.cfg-tab').forEach(t=>t.classList.remove('active'));
@@ -695,7 +707,7 @@ if(tab.dataset.tab==='tira')setTimeout(updateStripPreview,50);
  if(r>0){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+PW,y,x+PW,y+PH,r);ctx.arcTo(x+PW,y+PH,x,y+PH,r);ctx.arcTo(x,y+PH,x,y,r);ctx.arcTo(x,y,x+PW,y,r);ctx.closePath();ctx.stroke();}
  else{ctx.strokeRect(x,y,PW,PH);}
  ctx.fillStyle='rgba(255,255,255,0.25)';ctx.font='bold '+Math.round(PH*0.12)+'px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
- ctx.fillText('ð· '+String.fromCharCode(65+k),x+PW/2,y+PH/2);
+ ctx.fillText('Ã°ÂÂÂ· '+String.fromCharCode(65+k),x+PW/2,y+PH/2);
  }
  }
  // Bottom bar
@@ -711,7 +723,7 @@ if(tab.dataset.tab==='tira')setTimeout(updateStripPreview,50);
  ctx.restore();
 }
  
- // ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ OPEN/POPULATE CONFIG ÃÂ¢ÃÂÃÂÃÂ¢ÃÂÃÂ
+ // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ OPEN/POPULATE CONFIG ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
  $('cfg-toggle').addEventListener('click',()=>{
  $('ci-title').value=CFG.welcomeTitle;$('ci-sub').value=CFG.welcomeSubtitle;
  $('ci-name').value=CFG.eventName;$('ci-leg1').value=CFG.leg1||'';$('ci-leg2').value=CFG.leg2||'';$('ci-date').value=CFG.eventDate;
