@@ -295,7 +295,7 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:var(--font);ov
  </div>
  
  <script>
- // ââ PHOTO BOOTH v3.0 ââââââââââââââââââââââââââââââ
+ // Ã¢ÂÂÃ¢ÂÂ PHOTO BOOTH v3.0 Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ
  const DEFAULTS={
  eventName:'Party Cam',welcomeTitle:'Photo Booth',welcomeSubtitle:'Presiona el bot\u00f3n y sonr\u00ede!',
  welcomeBgColor:'#0d0d1a',welcomeAccent:'#ff66cc',
@@ -455,29 +455,48 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:var(--font);ov
  startReturn();
  }
  
- // ââ QR ââ
- function generateQR(dataUrl){
+ // Ã¢ÂÂÃ¢ÂÂ QR Ã¢ÂÂÃ¢ÂÂ
+ async function generateQR(dataUrl){
  const qcv=$('qr-canvas');if(!qcv)return;
- const size=qcv.width;
- // Usar la imagen directamente como QR via API pÃºblica (requiere internet)
- // Fallback offline: mostrar instrucciÃ³n
- const apiUrl='https://api.qrserver.com/v1/create-qr-code/?size='+size+'x'+size+'&data='+encodeURIComponent(dataUrl.slice(0,1500))+'&margin=2&color=000000&bgcolor=ffffff';
- const ctx=qcv.getContext('2d');
- const img=new Image();img.crossOrigin='anonymous';
- img.onload=()=>{ctx.clearRect(0,0,size,size);ctx.drawImage(img,0,0,size,size);};
- img.onerror=()=>{
- // Offline fallback: dibujar instrucciÃ³n manual
- ctx.fillStyle='#fff';ctx.fillRect(0,0,size,size);
- ctx.fillStyle='#333';ctx.font='bold 11px Arial';ctx.textAlign='center';
- ctx.fillText('Sin conexi\u00f3n',size/2,size/2-14);
- ctx.fillText('Usa "Descargar"',size/2,size/2+2);
- ctx.fillText('o "Compartir"',size/2,size/2+18);
- ctx.strokeStyle='#ccc';ctx.lineWidth=2;ctx.strokeRect(4,4,size-8,size-8);
- };
- img.src=apiUrl;
+ const qrLabel=$('qr-label');const qrHint=$('qr-hint');
+ // Show uploading state
+ const ctx=qcv.getContext('2d');ctx.clearRect(0,0,qcv.width,qcv.height);
+ ctx.fillStyle='rgba(255,255,255,0.08)';ctx.fillRect(0,0,qcv.width,qcv.height);
+ ctx.fillStyle='rgba(255,255,255,0.4)';ctx.font='13px Arial';ctx.textAlign='center';
+ ctx.fillText('Subiendo...', qcv.width/2, qcv.height/2);
+ if(qrLabel)qrLabel.textContent='📤 SUBIENDO IMAGEN...';
+ try{
+  // Convert dataUrl to blob
+  const res=await fetch(dataUrl);const blob=await res.blob();
+  // Try upload to file.io (returns a link valid for 1 download)
+  const fd=new FormData();fd.append('file',blob,'strip.jpg');
+  const r=await fetch('https://file.io/?expires=1d',{method:'POST',body:fd});
+  const json=await r.json();
+  const fileUrl=json.link||json.url;
+  if(!fileUrl)throw new Error('No URL returned');
+  // Generate QR for the URL
+  const size=qcv.width;
+  const apiUrl='https://api.qrserver.com/v1/create-qr-code/?size='+size+'x'+size+'&data='+encodeURIComponent(fileUrl)+'&margin=2&color=000000&bgcolor=ffffff';
+  const img=new Image();img.crossOrigin='anonymous';
+  img.onload=()=>{ctx.clearRect(0,0,size,size);ctx.drawImage(img,0,0,size,size);};
+  img.src=apiUrl;
+  if(qrLabel)qrLabel.textContent='📱 ESCANEA PARA DESCARGAR';
+  if(qrHint)qrHint.textContent='Link activo 24h · '+fileUrl.substring(0,30)+'...';
+  // Make QR clickable to open link
+  qcv.style.cursor='pointer';qcv.onclick=()=>window.open(fileUrl,'_blank');
+ }catch(e){
+  // Fallback: show error and hint to use AirDrop
+  ctx.clearRect(0,0,qcv.width,qcv.height);
+  ctx.fillStyle='rgba(255,100,100,0.15)';ctx.fillRect(0,0,qcv.width,qcv.height);
+  ctx.fillStyle='rgba(255,255,255,0.5)';ctx.font='12px Arial';ctx.textAlign='center';
+  ctx.fillText('Sin internet',qcv.width/2,qcv.height/2-10);
+  ctx.fillText('Usa AirDrop',qcv.width/2,qcv.height/2+10);
+  if(qrLabel)qrLabel.textContent='⚡ USA AIRDROP / COMPARTIR';
+  if(qrHint)qrHint.textContent='Sin conexión para subir imagen';
  }
+}
  
- // ââ AIRDROP / SHARE ââ
+ // Ã¢ÂÂÃ¢ÂÂ AIRDROP / SHARE Ã¢ÂÂÃ¢ÂÂ
  $('btn-airdrop').addEventListener('click',async()=>{
  cancelReturn();
  try{
@@ -497,7 +516,7 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:var(--font);ov
  startReturn();
  });
  
- // ââ BUILD STRIP ââ
+ // Ã¢ÂÂÃ¢ÂÂ BUILD STRIP Ã¢ÂÂÃ¢ÂÂ
  function loadImg(src){return new Promise(res=>{if(!src)return res(null);const img=new Image();img.onload=()=>res(img);img.onerror=()=>res(null);img.src=src;});}
  
  function roundRect(ctx,x,y,w,h,r){
@@ -592,7 +611,7 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:var(--font);ov
  
  function goHome(){cancelReturn();photos=[];activeFilter='normal';videoWrap.className='';filterStrip.querySelectorAll('.fb').forEach(b=>b.classList.remove('on'));filterStrip.querySelector('[data-f="normal"]')?.classList.add('on');buildSlots();showScreen('welcome');}
  
- // ââ LOGO UPLOAD ââ
+ // Ã¢ÂÂÃ¢ÂÂ LOGO UPLOAD Ã¢ÂÂÃ¢ÂÂ
  $('logo-file-input').addEventListener('change',e=>{
  const file=e.target.files[0];if(!file)return;
  const reader=new FileReader();reader.onload=ev=>{saveCfg({logoDataUrl:ev.target.result});};reader.readAsDataURL(file);e.target.value='';
@@ -607,7 +626,7 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:var(--font);ov
  };reader.readAsDataURL(file);e.target.value='';
  });
  
- // ââ CONFIG TABS ââ
+ // Ã¢ÂÂÃ¢ÂÂ CONFIG TABS Ã¢ÂÂÃ¢ÂÂ
  document.querySelectorAll('.cfg-tab').forEach(tab=>{
  tab.addEventListener('click',()=>{
  document.querySelectorAll('.cfg-tab').forEach(t=>t.classList.remove('active'));
@@ -620,21 +639,78 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:var(--font);ov
  
  function updateStripPreview(){
  const prev=$('strip-preview');if(!prev)return;
- if(resCv.width>0){
- const scale=Math.min(prev.width/resCv.width,prev.height/resCv.height);
- prev.width=Math.round(resCv.width*scale);prev.height=Math.round(resCv.height*scale);
- prev.getContext('2d').drawImage(resCv,0,0,prev.width,prev.height);
- }else{
- const ctx=prev.getContext('2d');
- ctx.fillStyle=CFG.stripBgColor;ctx.fillRect(0,0,prev.width,prev.height);
- ctx.fillStyle=CFG.accentColor;ctx.fillRect(0,0,prev.width,4);
- ctx.fillStyle='rgba(255,255,255,.1)';ctx.fillRect(8,18,prev.width-16,prev.height-36);
- ctx.fillStyle='#fff';ctx.font='bold 9px Arial';ctx.textAlign='center';
- ctx.fillText(CFG.eventName||'Photo Booth',prev.width/2,prev.height-10);
+ const panelOpen=$('cfg-panel')&&$('cfg-panel').classList.contains('open');
+ const cfg=panelOpen?{
+  totalPhotos:parseInt($('ci-total')?.value)||CFG.totalPhotos,
+  paddingX:parseInt($('ci-px')?.value)||CFG.paddingX,
+  paddingTop:parseInt($('ci-pt')?.value)||CFG.paddingTop,
+  paddingBottom:parseInt($('ci-pb')?.value)||CFG.paddingBottom,
+  gapBetweenPhotos:parseInt($('ci-gap')?.value)||CFG.gapBetweenPhotos,
+  cornerRadius:parseInt($('ci-rad')?.value)||CFG.cornerRadius,
+  stripWidth:CFG.stripWidth,
+  photoAspectRatio:CFG.photoAspectRatio,
+  stripBgColor:$('ci-bgcol')?.value||CFG.stripBgColor,
+  stripTextColor:$('ci-tcol')?.value||CFG.stripTextColor,
+  accentColor:$('ci-accent')?.value||CFG.welcomeAccent,
+  welcomeAccent:$('ci-accent')?.value||CFG.welcomeAccent,
+  topBarHeight:parseInt($('ci-topbar')?.value)||CFG.topBarHeight,
+  bottomBarHeight:parseInt($('ci-botbar')?.value)||CFG.bottomBarHeight,
+  fontSizeName:parseInt($('ci-fs-name')?.value)||CFG.fontSizeName,
+  fontName:CFG.fontName,
+  eventName:$('ci-name')?.value||CFG.eventName,
+  logoDataUrl:CFG.logoDataUrl
+ }:(typeof CFG!=='undefined'?CFG:DEFAULTS);
+ const n=photos.length||cfg.totalPhotos||3;
+ const PX=cfg.paddingX,PT=cfg.paddingTop,PB=cfg.paddingBottom,GAP=cfg.gapBetweenPhotos;
+ const SW=cfg.stripWidth,PW=SW-PX*2,PH=Math.round(PW/cfg.photoAspectRatio);
+ const SH=PT+(PH+GAP)*n-GAP+PB;
+ // Scale to fit preview canvas
+ const maxW=prev.parentElement?prev.parentElement.clientWidth-20:200;
+ const scale=Math.min(maxW/SW, 320/SH, 1);
+ prev.width=Math.round(SW*scale);prev.height=Math.round(SH*scale);
+ const ctx=prev.getContext('2d');ctx.save();ctx.scale(scale,scale);
+ // Background
+ const bg=cfg.stripBgColor||'#ffffff';
+ ctx.fillStyle=bg;ctx.fillRect(0,0,SW,SH);
+ // Top bar
+ if(cfg.topBarHeight>0){ctx.fillStyle=cfg.accentColor||cfg.welcomeAccent||'#ff66cc';ctx.fillRect(0,0,SW,cfg.topBarHeight);}
+ // Logo if loaded
+ if(cfg.logoDataUrl){try{const limg=new Image();limg.src=cfg.logoDataUrl;if(limg.complete&&limg.naturalWidth>0){const lh=cfg.topBarHeight>10?cfg.topBarHeight-4:PT*0.7;const lw=Math.round(lh*limg.naturalWidth/limg.naturalHeight);ctx.drawImage(limg,Math.round((SW-lw)/2),Math.round((cfg.topBarHeight-lh)/2)||2,lw,lh);}}catch(e){}}
+ // Photo slots
+ for(let k=0;k<n;k++){
+  const x=PX,y=PT+(PH+GAP)*k;
+  const r=cfg.cornerRadius||0;
+  if(photos[k]){
+   ctx.save();ctx.beginPath();
+   if(r>0){ctx.moveTo(x+r,y);ctx.arcTo(x+PW,y,x+PW,y+PH,r);ctx.arcTo(x+PW,y+PH,x,y+PH,r);ctx.arcTo(x,y+PH,x,y,r);ctx.arcTo(x,y,x+PW,y,r);}
+   else{ctx.rect(x,y,PW,PH);}
+   ctx.clip();ctx.drawImage(photos[k],x,y,PW,PH);ctx.restore();
+  }else{
+   // Placeholder
+   ctx.fillStyle='rgba(128,128,128,0.15)';
+   if(r>0){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+PW,y,x+PW,y+PH,r);ctx.arcTo(x+PW,y+PH,x,y+PH,r);ctx.arcTo(x,y+PH,x,y,r);ctx.arcTo(x,y,x+PW,y,r);ctx.closePath();ctx.fill();}
+   else{ctx.fillRect(x,y,PW,PH);}
+   ctx.strokeStyle='rgba(128,128,128,0.3)';ctx.lineWidth=1;
+   if(r>0){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+PW,y,x+PW,y+PH,r);ctx.arcTo(x+PW,y+PH,x,y+PH,r);ctx.arcTo(x,y+PH,x,y,r);ctx.arcTo(x,y,x+PW,y,r);ctx.closePath();ctx.stroke();}
+   else{ctx.strokeRect(x,y,PW,PH);}
+   ctx.fillStyle='rgba(255,255,255,0.25)';ctx.font='bold '+Math.round(PH*0.12)+'px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
+   ctx.fillText('📷 '+String.fromCharCode(65+k),x+PW/2,y+PH/2);
+  }
  }
+ // Bottom bar
+ if(cfg.bottomBarHeight>0){ctx.fillStyle=cfg.accentColor||'#ff66cc';ctx.fillRect(0,SH-cfg.bottomBarHeight,SW,cfg.bottomBarHeight);}
+ // Event name text
+ if(cfg.eventName){
+  const nameSize=cfg.fontSizeName||14;
+  ctx.fillStyle=cfg.stripTextColor||'#333333';
+  ctx.font='bold '+nameSize+'px '+(cfg.fontName||'Arial');
+  ctx.textAlign='center';ctx.textBaseline='top';
+  ctx.fillText(cfg.eventName,SW/2,SH-PB+4);
  }
+ ctx.restore();
+}
  
- // ââ OPEN/POPULATE CONFIG ââ
+ // Ã¢ÂÂÃ¢ÂÂ OPEN/POPULATE CONFIG Ã¢ÂÂÃ¢ÂÂ
  $('cfg-toggle').addEventListener('click',()=>{
  $('ci-title').value=CFG.welcomeTitle;$('ci-sub').value=CFG.welcomeSubtitle;
  $('ci-name').value=CFG.eventName;$('ci-leg1').value=CFG.leg1||'';$('ci-leg2').value=CFG.leg2||'';$('ci-date').value=CFG.eventDate;
@@ -663,7 +739,9 @@ html,body{width:100%;height:100%;background:var(--bg);font-family:var(--font);ov
  $('ci-autoprint').value=CFG.autoPrint?'1':'0';
  $('ci-bgimg').value=CFG.stripBgImage||'';$('ci-overlay').value=CFG.overlayImage||'';
  if(CFG.logoDataUrl){const img=$('cfg-logo-img');img.src=CFG.logoDataUrl;img.style.display='block';$('cfg-logo-preview').querySelector('span').style.display='none';}
- updateStripPreview();$('cfg-panel').classList.add('open');
+ updateStripPreview();
+ // Wire live preview to all config inputs
+ document.querySelectorAll('#cfg-body input,#cfg-body select').forEach(el=>{el.removeEventListener('input',updateStripPreview);el.addEventListener('input',updateStripPreview);});$('cfg-panel').classList.add('open');
  });
  $('cfg-close').addEventListener('click',()=>$('cfg-panel').classList.remove('open'));
  $('cfg-apply').addEventListener('click',()=>{
